@@ -319,9 +319,9 @@ groups = [
         Group('gimp',
             init=False,
             persist=False,
-            layout='floating',
+            layout='gimp',
+            #layout='floating',
             #layouts=['floating', 'max'],
-            exclusive=True,
             matches=[Match(wm_class=['Gimp'])]
             ),
         Group('vbox',
@@ -407,9 +407,9 @@ layouts = [
     #layout.Tile(**layout_theme),
     #layout.Matrix(**layout_theme),
     #layout.Stack(num_stacks=2, **layout_theme),
-    #layout.Slice(side="left", width=192, name="gimp", role="gimp-toolbox",
-    #            fallback=layout.Slice(side="right", width=256, role="gimp-dock",
-    #            fallback=layout.Stack(num_stacks=1, border_args={"border_width": 2}))),
+    layout.Slice(side="left", width=200, name="gimp", role="gimp-toolbox",
+                fallback=layout.Slice(side="right", width=250, role="gimp-dock",
+                fallback=layout.Stack(num_stacks=1, border_args={"border_width": 2}))),
     layout.Floating(**layout_theme)
 ]
 
@@ -659,7 +659,7 @@ mouse = [
 #dgroups_key_binder = None
 dgroups_app_rules: List = []
 main = None
-follow_mouse_focus = True
+follow_mouse_focus = False
 bring_front_click = False
 cursor_warp = False
 floating_layout = layout.Floating(float_rules=[
@@ -679,8 +679,10 @@ floating_layout = layout.Floating(float_rules=[
     {'wmclass': 'ssh-askpass'},  # ssh-askpass
     {'wmclass': 'gnome-screenshot'},
     {'wmclass': 'gnome-calculator'},
+    {'wmclass': 'eog'},
     #{'wmclass': 'gnome-control-center'},
 ])
+
 auto_fullscreen = True
 focus_on_window_activation = "smart"
 

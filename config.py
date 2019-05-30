@@ -42,6 +42,10 @@ terminal = "gnome-terminal --hide-menubar"
 browser = "chromium-browser --profile-directory=Default"
 file_manager = "nautilus"
 home = os.path.expanduser('~')
+# Switch selected group when moving window to another group
+switch_group_when_moving_window = True
+# Switch focused screen when moving window to another screen
+switch_screen_when_moving_window = True
 
 ##### WINDOW UTIL FUNCTIONS #####
 
@@ -49,14 +53,21 @@ home = os.path.expanduser('~')
 def window_to_prev_group(qtile):
     if qtile.currentWindow is not None:
         i = qtile.groups.index(qtile.currentGroup)
-        qtile.currentWindow.togroup(qtile.groups[i - 1].name)
+        target_group = qtile.groups[i - 1]
+        qtile.currentWindow.togroup(target_group.name)
+        if switch_group_when_moving_window: 
+            qtile.currentScreen.setGroup(target_group)
+
 
 
 @lazy.function
 def window_to_next_group(qtile):
     if qtile.currentWindow is not None:
         i = qtile.groups.index(qtile.currentGroup)
-        qtile.currentWindow.togroup(qtile.groups[i + 1].name)
+        target_group = qtile.groups[i + 1]
+        qtile.currentWindow.togroup(target_group.name)
+        if switch_group_when_moving_window: 
+            qtile.currentScreen.setGroup(target_group)
 
 
 def window_to_prev_screen():
@@ -65,9 +76,12 @@ def window_to_prev_screen():
         if qtile.currentWindow is not None:
             index = qtile.screens.index(qtile.currentScreen)
             if index > 0:
-                qtile.currentWindow.togroup(qtile.screens[index - 1].group.name)
+                index_target_screen = index - 1
             else:
-                qtile.currentWindow.togroup(qtile.screens[len(qtile.screens) - 1].group.name)
+                index_target_screen = len(qtile.screens) - 1
+            qtile.currentWindow.togroup(qtile.screens[index_target_screen].group.name)
+            if switch_screen_when_moving_window: 
+                qtile.cmd_to_screen(index_target_screen)
 
     return __inner
 
@@ -78,9 +92,12 @@ def window_to_next_screen():
         if qtile.currentWindow is not None:
             index = qtile.screens.index(qtile.currentScreen)
             if index < len(qtile.screens) - 1:
-                qtile.currentWindow.togroup(qtile.screens[index + 1].group.name)
+                index_target_screen = index + 1
             else:
-                qtile.currentWindow.togroup(qtile.screens[0].group.name)
+                index_target_screen = 0
+            qtile.currentWindow.togroup(qtile.screens[index_target_screen].group.name)
+            if switch_screen_when_moving_window: 
+                qtile.cmd_to_screen(index_target_screen)
 
     return __inner
 
@@ -255,8 +272,6 @@ keys = [
 
     # Switch window focus to other pane(s) of stack
     Key([mod], "space", lazy.layout.next()),
-    # Swap panes of split stack
-    Key([mod, "shift"], "space", lazy.layout.rotate()),
 
     # Toggle between split and unsplit sides of stack.
     # Split = all windows displayed
@@ -280,7 +295,7 @@ keys = [
     Key([mod], "F3", lazy.group[group_names[2]].toscreen(1)),
     Key([mod], "F4", lazy.group[group_names[3]].toscreen(1)),
 
-    Key(['shift'], "F12", lazy.function(to_urgent)),
+    Key([], "F12", lazy.function(to_urgent)),
 
     # Keyboard layouts
     #Key([mod], "F1", lazy.spawn("setxkbmap -layout us")),
@@ -299,7 +314,7 @@ keys = [
     Key([mod], "q", lazy.spawn("chromium-browser --profile-directory=ProfileDev")),
     Key([mod], "f", lazy.spawn(file_manager)),
     Key([mod], "v", lazy.spawn("viber")),
-    Key([mod], "s", lazy.spawn("skype")),
+    Key([mod], "s", lazy.spawn("skypeforlinux")),
     Key([mod], "d", lazy.spawn("goldendict")),
     Key([mod], "e", lazy.spawn("gedit")),
     Key([mod], "c", lazy.spawn("gnome-calculator")),
@@ -309,10 +324,7 @@ keys = [
 
     # Screenshots
     Key(["shift"], "Print", lazy.spawn("gnome-screenshot -ia")),
-    #Key(["shift"], "Print", lazy.spawn("gnome-screenshot -a -f ~/Pictures/screenshot.png")),
-    #Key(["shift"], "Print", lazy.spawn("gnome-screenshot -a -f ~/Pictures/screenshot.png 2>/dev/null")),
-    #Key(["shift"], "Print", lazy.spawn("gnome-screenshot -a -f /home/alx/Pictures/screenshot.png 2>/dev/null")),
-    #Key(["shift"], "Print", lazy.spawn("gnome-screenshot -a -f /home/alx/Pictures/screenshot.png --display=:0")),
+    #Key(["shift"], "Print", lazy.spawn("gnome-screenshot -a -f " + home + "/Pictures/screenshot.png --display=:0")),
     Key([], "Print", lazy.spawn("scrot " + home + "/Pictures/screenshot_%Y_%m_%d_%H_%M_%S.png")),
     Key(["control"], "Print", lazy.spawn("scrot -u " + home + "/Pictures/screenshot_%Y_%m_%d_%H_%M_%S.png")),
 
@@ -571,6 +583,8 @@ screens = [
 #                        update_interval = 2,
 #                        padding = 5
 #                        ),
+                #widget.TaskList(),
+                #widget.WindowTabs(),
                 widget.Sep(**sep_inv_options),
                 widget.TextBox(
                     text="CPU:",

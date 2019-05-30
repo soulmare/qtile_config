@@ -59,10 +59,30 @@ def window_to_next_group(qtile):
         qtile.currentWindow.togroup(qtile.groups[i + 1].name)
 
 
-def my_log(s):
-    with open('/home/alx/qtile.log', 'a') as file:
-        file.write(s)
-        file.write("\n")
+def window_to_prev_screen():
+    @lazy.function
+    def __inner(qtile):
+        if qtile.currentWindow is not None:
+            index = qtile.screens.index(qtile.currentScreen)
+            if index > 0:
+                qtile.currentWindow.togroup(qtile.screens[index - 1].group.name)
+            else:
+                qtile.currentWindow.togroup(qtile.screens[len(qtile.screens) - 1].group.name)
+
+    return __inner
+
+
+def window_to_next_screen():
+    @lazy.function
+    def __inner(qtile):
+        if qtile.currentWindow is not None:
+            index = qtile.screens.index(qtile.currentScreen)
+            if index < len(qtile.screens) - 1:
+                qtile.currentWindow.togroup(qtile.screens[index + 1].group.name)
+            else:
+                qtile.currentWindow.togroup(qtile.screens[0].group.name)
+
+    return __inner
 
 
 def to_urgent(qtile):
@@ -96,6 +116,12 @@ class swap_group(object):
 
 
 #### OTHER FUNCTIONS ####
+
+def my_log(s):
+    with open('/home/alx/qtile.log', 'a') as file:
+        file.write(s)
+        file.write("\n")
+
 
 def is_running(process):
     s = subprocess.Popen(["ps", "axuw"], stdout=subprocess.PIPE)
@@ -198,6 +224,14 @@ keys = [
     Key(
         [mod, "shift"], "Right",                # Move window to workspace to the right
         window_to_next_group
+        ),
+    Key(
+        [mod, "control"], "Left",                 # Move window to screen to the left
+        window_to_prev_screen()
+        ),
+    Key(
+        [mod, "control"], "Right",                # Move window to screen to the right
+        window_to_next_screen()
         ),
     Key(
         [mod], "n",

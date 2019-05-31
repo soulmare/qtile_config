@@ -380,7 +380,7 @@ keys = [
     # Switch groups on 2nd monitor
     Key([mod], "F5", lazy.function(group_to_screen_by_index(5))),
 
-    Key([], "F12", lazy.function(to_urgent)),
+    #Key([], "F12", lazy.function(to_urgent)),
 
     # Keyboard layouts
     #Key([mod], "F1", lazy.spawn("setxkbmap -layout us")),
@@ -424,6 +424,8 @@ keys = [
     
     # suspend
     Key([mod, "control"], "z", lazy.spawn("systemctl suspend")),
+    # power off
+    Key([mod, "control"], "x", lazy.spawn("shutdown -h now")),
 ]
 
 groups = [
@@ -565,6 +567,7 @@ widget_defaults = dict(
     fontsize=13,
     foreground=colors[11],
 )
+widgets_default_update_interval = 0.7
 extension_defaults = widget_defaults.copy()
 
 group_box_options = dict(font="Ubuntu",
@@ -594,7 +597,7 @@ widget_kb_layout_options = dict(
                         fontsize=16,
                         foreground = colors[16],
                         padding = 6,
-                        update_interval = 0.7,
+                        update_interval = widgets_default_update_interval,
                         configured_keyboards=['us', 'ru', 'ua']
                         )
 widget_kbdd_options = dict(
@@ -602,7 +605,7 @@ widget_kbdd_options = dict(
                         fontsize=18,
                         foreground = colors[16],
                         padding = 6,
-                        update_interval = 0.7,
+                        update_interval = widgets_default_update_interval,
                         configured_keyboards=['us', 'ru', 'ua']
                         )
 sep_options = dict(
@@ -747,18 +750,23 @@ screens = [
                         background=colors[17],
                         ),
                 widget.Volume(
-                        update_interval=0.2,
+                        update_interval=widgets_default_update_interval,
                         foreground=colors[11],
                         background=colors[17],
-                        #emoji=True,
                         ),
                 #widget.KeyboardLayout(**widget_kb_layout_options),
                 widget.KeyboardKbdd(
                         background=colors[17],
                         **widget_kbdd_options
                         ),
-                #widget.CapsNumLockIndicator(),
+                widget.CapsNumLockIndicator(
+                        update_interval=widgets_default_update_interval,
+                        foreground=colors[16],
+                        background=colors[17],
+                        padding=0,
+                        ),
                 widget.Clock(
+                        update_interval=2,
                         font="Ubuntu",
                         padding=5,
                         fontsize=16,
@@ -891,6 +899,11 @@ def startup_once():
     Run after qtile is started very first time
     """
 
+    home = os.path.expanduser("~")
+
+    # Autostart shell script
+    subprocess.call([home + "/.config/qtile/autostart.sh"])
+
     # Set up keyboard layouts
     os.system("setxkbmap -layout 'us, ru, ua'")
     #os.system("setxkbmap -option 'grp:alt_shift_toggle'")
@@ -907,4 +920,3 @@ def startup_once():
     # Fix antialiasing in Netbeans
     os.environ["_JAVA_OPTIONS"] = '-Dswing.aatext=TRUE -Dawt.useSystemAAFontSettings=on'
 
-    #execute_once("firefox")

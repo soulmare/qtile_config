@@ -1,0 +1,5 @@
+pip3 install --upgrade setuptools
+pip install xcffib
+pip install cairocffi
+pip3 install qtile
+

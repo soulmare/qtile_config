@@ -135,10 +135,7 @@ class swap_group(object):
 
 '''
   Find application if it is already launched and focus it on the current screen.
-<<<<<<< HEAD
   If multiple windows are found - prefer focusing those belonging to the specified group.
-=======
->>>>>>> 6cc13154bb0482979e91f0e0d84d48bba7003a15
   If not found, launch new instance. If group is given, first go to that group
   and then launch app.
 
@@ -146,10 +143,7 @@ class swap_group(object):
   Modified by Soulmare:
     * Compatibility with Ubuntu (different location of ps util)
     * Go to group
-<<<<<<< HEAD
     * Prefer window if group specified
-=======
->>>>>>> 6cc13154bb0482979e91f0e0d84d48bba7003a15
 '''
 def find_or_run(app, classes=(), group="", processes=()):
     if not processes:
@@ -157,7 +151,6 @@ def find_or_run(app, classes=(), group="", processes=()):
 
     def __inner(qtile):
         if classes:
-<<<<<<< HEAD
             window_found = None
             for window in qtile.windowMap.values():
                 for c in classes:
@@ -173,14 +166,6 @@ def find_or_run(app, classes=(), group="", processes=()):
                 qtile.currentScreen.setGroup(window_found.group)
                 window_found.group.focus(window_found, False)
                 return
-=======
-            for window in qtile.windowMap.values():
-                for c in classes:
-                    if window.group and window.match(wmclass=c):
-                        qtile.currentScreen.setGroup(window.group)
-                        window.group.focus(window, False)
-                        return
->>>>>>> 6cc13154bb0482979e91f0e0d84d48bba7003a15
         if group:
             if os.path.isfile('/usr/bin/ps'):
                 ps = '/usr/bin/ps'

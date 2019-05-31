@@ -148,24 +148,27 @@ class swap_group(object):
 def find_or_run(app, classes=(), group="", processes=()):
     if not processes:
         processes = [regex(app.split('/')[-1])]
+    if not classes:
+        # If no class specified, try to use app name as class
+        classes = (app[0], ) if isinstance(app, list) else (app, )
 
     def __inner(qtile):
-        if classes:
-            window_found = None
-            for window in qtile.windowMap.values():
-                for c in classes:
-                    if window.group and window.match(wmclass=c):
-                        window_found = window
-                if group and window_found and group == window_found.group.name:
-                    # If window was found on it's preferred group, stop search.
-                    # Otherwise, continue search to the end.
-                    # Doing so, we can select which window to focus
-                    # if multiple windows were matched.
-                    break
-            if window_found:
-                qtile.currentScreen.setGroup(window_found.group)
-                window_found.group.focus(window_found, False)
-                return
+        window_found = None
+        for window in qtile.windowMap.values():
+            for c in classes:
+                if window.group and window.match(wmclass=c):
+                    window_found = window
+            if group and window_found and group == window_found.group.name:
+                # If window was found on it's preferred group, stop search.
+                # Otherwise, continue search to the end.
+                # Doing so, we can select which window to focus
+                # if multiple windows were matched.
+                break
+        if window_found:
+            qtile.currentScreen.setGroup(window_found.group)
+            window_found.group.focus(window_found, False)
+            return
+
         if group:
             if os.path.isfile('/usr/bin/ps'):
                 ps = '/usr/bin/ps'
@@ -399,12 +402,12 @@ keys = [
     #Key([mod], "q", lazy.function(find_or_run("chromium-browser --profile-directory=ProfileDev", ("chromium-browser",), group=group_names[2]))),
     Key([mod], "q", lazy.spawn("chromium-browser --profile-directory=ProfileDev")),
     Key([mod], "f", lazy.spawn(file_manager)),
-    Key([mod], "v", lazy.function(find_or_run("viber", ("viber",), ))),
-    Key([mod], "s", lazy.function(find_or_run("skypeforlinux", ("Skype",), ))),
+    Key([mod], "v", lazy.function(find_or_run("viber"))),
+    Key([mod], "s", lazy.function(find_or_run("skypeforlinux"))),
     Key([mod], "d", lazy.spawn("goldendict")),
     Key([mod], "e", lazy.spawn("gedit")),
-    Key([mod], "c", lazy.spawn("gnome-calculator")),
-    Key([mod], "o", lazy.spawn("gnome-control-center")),
+    Key([mod], "c", lazy.function(find_or_run("gnome-calculator"))),
+    Key([mod], "o", lazy.function(find_or_run("gnome-control-center"))),
     Key([mod], "i", lazy.spawn("libreoffice --writer")),
     Key([mod, "control"], "F1", lazy.spawn("qtile-autostart-dev")),
 
@@ -826,7 +829,7 @@ floating_layout = layout.Floating(float_rules=[
     {'wmclass': 'gnome-screenshot'},
     {'wmclass': 'gnome-calculator'},
     {'wmclass': 'eog'},
-    #{'wmclass': 'gnome-control-center'},
+    {'wmclass': 'gnome-control-center'},
 ])
 
 auto_fullscreen = True

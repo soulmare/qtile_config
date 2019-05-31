@@ -40,6 +40,7 @@ mod = "mod4"
 alt = "mod1"
 terminal = "gnome-terminal --hide-menubar"
 browser = "chromium-browser --profile-directory=Default"
+browser_wm_class = "chromium-browser"
 file_manager = "nautilus"
 home = os.path.expanduser('~')
 # Switch selected group when moving window to another group
@@ -132,6 +133,52 @@ class swap_group(object):
             qtile.currentScreen.setGroup(self.last_group)
 
 
+'''
+  Find application if it is already launched and focus it on the current screen.
+  If not found, launch new instance. If group is given, first go to that group
+  and then launch app.
+
+  Original source: https://github.com/qtile/qtile-examples/blob/master/mort65/config.py
+  Modified by Soulmare:
+    * Compatibility with Ubuntu (different location of ps util)
+    * Go to group
+'''
+def find_or_run(app, classes=(), group="", processes=()):
+    if not processes:
+        processes = [regex(app.split('/')[-1])]
+
+    def __inner(qtile):
+        if classes:
+            for window in qtile.windowMap.values():
+                for c in classes:
+                    if window.group and window.match(wmclass=c):
+                        qtile.currentScreen.setGroup(window.group)
+                        window.group.focus(window, False)
+                        return
+        if group:
+            if os.path.isfile('/usr/bin/ps'):
+                ps = '/usr/bin/ps'
+            elif os.path.isfile('/bin/ps'):
+                ps = '/bin/ps'
+            else:
+                # ps not found. maybe, should be better to raise an exception here..
+                return
+            lines = subprocess.check_output([ps, "axw"]).decode("utf-8").splitlines()
+            ls = [line.split()[4:] for line in lines][1:]
+            ps = [' '.join(l) for l in ls]
+            for p in ps:
+                for process in processes:
+                    if re.match(process, p):
+                        qtile.groupMap[group].cmd_toscreen()
+                        return
+            for check_group in qtile.groups:
+                if check_group.name == group:
+                    qtile.currentScreen.setGroup(check_group)
+        subprocess.Popen(app.split())
+
+    return __inner
+
+
 #### OTHER FUNCTIONS ####
 
 def my_log(s):
@@ -151,6 +198,10 @@ def is_running(process):
 def execute_once(process):
     if not is_running(process):
         return subprocess.Popen(process.split())
+
+
+def regex(name):
+    return r'.*(^|\s|\t|\/)' + name + r'(\s|\t|$).*'
 
 
 #### MAIN ####
@@ -302,18 +353,22 @@ keys = [
     #Key([mod], "F2", lazy.spawn("setxkbmap -layout ru")),
     #Key([mod], "F3", lazy.spawn("setxkbmap -layout ua")),
 
-    # Sound and Mpd
+    # Sound
     Key([], "XF86AudioRaiseVolume", lazy.spawn("amixer sset Master 5%+")),
+    Key([mod], "KP_Add", lazy.spawn("amixer sset Master 5%+")),
     Key([], "XF86AudioLowerVolume", lazy.spawn("amixer sset Master 5%-")),
+    Key([mod], "KP_Subtract", lazy.spawn("amixer sset Master 5%-")),
     # BUG: Unmute in Ubuntu works not so much good. Workaround: mute master, but unmute other channels also.
     Key([], "XF86AudioMute", lazy.spawn("amixer sset Master toggle"), lazy.spawn("amixer sset Speaker+LO toggle")),
+    Key([mod], "KP_Multiply", lazy.spawn("amixer sset Master toggle"), lazy.spawn("amixer sset Speaker+LO toggle")),
 
     # Launch applications
     Key([mod], "Return", lazy.spawn(terminal)),
-    Key([mod], "w", lazy.spawn(browser)),
+    #Key([mod], "w", lazy.spawn(browser)),
+    Key([mod], "w", lazy.function(find_or_run(browser, (browser_wm_class,), group="2:www"))),
     Key([mod], "q", lazy.spawn("chromium-browser --profile-directory=ProfileDev")),
     Key([mod], "f", lazy.spawn(file_manager)),
-    Key([mod], "v", lazy.spawn("viber")),
+    Key([mod], "v", lazy.function(find_or_run("viber", ("viber",), ))),
     Key([mod], "s", lazy.spawn("skypeforlinux")),
     Key([mod], "d", lazy.spawn("goldendict")),
     Key([mod], "e", lazy.spawn("gedit")),

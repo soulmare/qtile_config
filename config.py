@@ -680,7 +680,11 @@ screens = [
                 #widget.CurrentScreen(**cur_scr2_options),
                 widget.TextBox(**wn_prefix_options),
                 widget.WindowName(**wn_options),
-                widget.Notify(),
+                widget.Notify(
+                    background = colors[16],
+                    background_urgent = "FF0000",
+                    foreground = "000000",
+                    ),
 #                widget.Net(
 #                        interface = "eno1",
 #                        foreground = colors[11],

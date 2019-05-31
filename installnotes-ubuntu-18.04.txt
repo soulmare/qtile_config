@@ -4,4 +4,5 @@ pip install cairocffi
 pip3 install qtile
 
 sudo apt install policykit-1-gnome
+sudo apt install suckless-tools
 

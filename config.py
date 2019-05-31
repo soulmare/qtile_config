@@ -48,6 +48,54 @@ switch_group_when_moving_window = True
 # Switch focused screen when moving window to another screen
 switch_screen_when_moving_window = True
 
+### COLORS ###
+
+color_hl = "#C3C300"
+#color_hl = "#44DD44"
+#color_hl = "#DD4444"
+colors = [
+         ["#707070", "#303030"], # panel background
+         ["#000000", "#000000"], # background for current screen tab
+         ["#AAAAAA", "#EEEEEE"], # foreground for group names (inactive/active)
+         ["#333333", "#333333"], # group on this screen when unfocused
+         ["#AA2A2A", "#AA2A2A"], # group on this screen when focused
+         ["#4A4A4A", "#4A4A4A"], # group on other screen when unfocused
+         ["#4A4A4A", "#4A4A4A"], # group on other screen when focused
+         ["#707070", "#303030"], # background color for layout widget
+         [color_hl, color_hl], # foreground color for layout widget
+         ["#000000", "#000000"], # background color for clock widget
+         ["#CCCCCC", "#CCCCCC"], # foreground color for clock widget
+         ["#CCCCCC", "#CCCCCC"], # foreground color for network widget
+         ["#FF0000", "#FF0000"], # background color for updates widget (has updates)
+
+         #[color_hl, "#FFFFFF"], # foreground color for prompt widget (normal/selected)
+         #["#252525", "#AA2A2A"], # background color for prompt widget (normal/selected)
+
+         ["#CCCCCC", color_hl], # foreground color for prompt widget (normal/selected)
+         ["#252525", "#AA2A2A"], # background color for prompt widget (normal/selected)
+
+         ["#303030", "#303030"], # separator color
+         [color_hl, color_hl], # foreground color for keyboardLayout widget
+         ["#444444", "#444444"], # background color for systray widget
+]
+flat_theme = {
+          "bg_dark": ["#606060", "#000000"],
+         "bg_light": ["#707070", "#303030"],
+         "font_color": ["#ffffff", "#cacaca"],
+         # groupbox
+         "gb_selected": ["#7BA1BA", "#215578"],
+         "gb_urgent": ["#ff0000", "#820202"]
+}
+theme = flat_theme
+#bars_background = ["#101010", "#202020"]
+
+layout_theme = {"border_width": 2,
+            "margin": 0,
+            "border_focus": "DD0000",
+            "border_normal": "1D2330"
+           }
+
+
 ##### WINDOW UTIL FUNCTIONS #####
 
 @lazy.function
@@ -219,7 +267,7 @@ def window_to_group_by_index(index, screen_index=None):
 #### OTHER FUNCTIONS ####
 
 def my_log(s):
-    with open('/home/alx/qtile.log', 'a') as file:
+    with open('/home/alx/qtile2.log', 'a') as file:
         file.write(s)
         file.write("\n")
 
@@ -282,6 +330,11 @@ group_names = [
         "3:dev",
         "4:msg",
         ]
+
+prompt = "{0}@{1}: ".format(os.environ["USER"], socket.gethostname())
+dmenu = 'dmenu_run -i -p ' + prompt + ' -fn "Ubuntu-14" -nb "' + colors[14][0] + '" -nf "' + colors[13][0] + '" -sb "' + colors[14][1] + '" -sf "' + colors[13][1] + '"'
+my_log(dmenu)
+dmenu_windows = home + '/.config/qtile/dmenu-qtile-windowlist.py'
 
 # Key bindings
 
@@ -420,7 +473,9 @@ keys = [
     Key([mod, "control"], "r", lazy.restart()),
     Key([mod, "control"], "q", lazy.shutdown()),
     #Key([mod], "t", lazy.findwindow()),
-    Key([mod], "r", lazy.spawncmd()),
+    #Key([mod], "r", lazy.spawncmd()),
+    Key([mod], "r", lazy.spawn(dmenu)),
+    Key([mod], "a", lazy.spawn(dmenu_windows)),
     
     # suspend
     Key([mod, "control"], "z", lazy.spawn("systemctl suspend")),
@@ -492,46 +547,6 @@ for i in range(0, 10):
         Key([mod, "shift"], fkey_name, lazy.function(window_to_group_by_index(i, 1))),
     ])
 
-color_hl = "#C3C300"
-#color_hl = "#44DD44"
-#color_hl = "#DD4444"
-colors = [
-         ["#707070", "#303030"], # panel background
-         ["#000000", "#000000"], # background for current screen tab
-         ["#AAAAAA", "#EEEEEE"], # foreground for group names (inactive/active)
-         ["#333333", "#333333"], # group on this screen when unfocused
-         ["#AA2A2A", "#AA2A2A"], # group on this screen when focused
-         ["#4A4A4A", "#4A4A4A"], # group on other screen when unfocused
-         ["#4A4A4A", "#4A4A4A"], # group on other screen when focused
-         ["#707070", "#303030"], # background color for layout widget
-         [color_hl, color_hl], # foreground color for layout widget
-         ["#000000", "#000000"], # background color for clock widget
-         ["#CCCCCC", "#CCCCCC"], # foreground color for clock widget
-         ["#CCCCCC", "#CCCCCC"], # foreground color for network widget
-         ["#FF0000", "#FF0000"], # background color for updates widget (has updates)
-         ["#FFFFFF", "#FFFFFF"], # foreground color for prompt widget
-         ["#252525", "#252525"], # background color for prompt widget
-         ["#303030", "#303030"], # separator color
-         [color_hl, color_hl], # foreground color for keyboardLayout widget
-         ["#444444", "#444444"], # background color for systray widget
-]
-flat_theme = {
-          "bg_dark": ["#606060", "#000000"],
-         "bg_light": ["#707070", "#303030"],
-         "font_color": ["#ffffff", "#cacaca"],
-         # groupbox
-         "gb_selected": ["#7BA1BA", "#215578"],
-         "gb_urgent": ["#ff0000", "#820202"]
-}
-theme = flat_theme
-#bars_background = ["#101010", "#202020"]
-
-layout_theme = {"border_width": 2,
-            "margin": 0,
-            "border_focus": "DD0000",
-            "border_normal": "1D2330"
-           }
-
 layouts = [
     layout.MonadTall(ratio=0.7, **layout_theme),
     layout.Max(**layout_theme),
@@ -589,8 +604,6 @@ group_box_options = dict(font="Ubuntu",
                     background = colors[0],
                     disable_drag=True,
 )
-
-prompt = "{0}@{1}: ".format(os.environ["USER"], socket.gethostname())
 
 widget_kb_layout_options = dict(
                         font="Ubuntu Bold",
@@ -807,7 +820,6 @@ screens = [
     ),
 ]
 
-
 # Drag floating layouts.
 mouse = [
     Drag([mod], "Button1", lazy.window.set_position_floating(),
@@ -842,6 +854,7 @@ floating_layout = layout.Floating(float_rules=[
     {'wmclass': 'gnome-calculator'},
     {'wmclass': 'eog'},
     {'wmclass': 'gnome-control-center'},
+    {'wmclass': 'Meld'},
 ])
 
 auto_fullscreen = True

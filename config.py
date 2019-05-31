@@ -1,4 +1,4 @@
-# Copyright (c) 2010 Aldo Cortesi
+# Copyright (c) 2010 Aldo Cortesiscreen:
 # Copyright (c) 2010, 2014 dequis
 # Copyright (c) 2012 Randall Ma
 # Copyright (c) 2012-2014 Tycho Andersen
@@ -190,6 +190,29 @@ def find_or_run(app, classes=(), group="", processes=()):
     return __inner
 
 
+def group_to_screen_by_index(index, screen_index=None):
+    def __inner(qtile):
+        if index >= 0 and index < len(qtile.groups):
+            qtile.groups[index].cmd_toscreen(screen_index)
+
+    return __inner
+
+
+def window_to_group_by_index(index, screen_index=None):
+    def __inner(qtile):
+        if index >= 0 and index < len(qtile.groups):
+            if qtile.currentWindow is not None:
+                qtile.currentWindow.togroup(qtile.groups[index].name)
+                if switch_group_when_moving_window: 
+                    #qtile.currentScreen.setGroup(qtile.groups[index])
+                    qtile.groups[index].cmd_toscreen(screen_index)
+                    current_screen_index = qtile.screens.index(qtile.currentScreen)
+                    if switch_screen_when_moving_window and screen_index and current_screen_index != screen_index:
+                        qtile.cmd_to_screen(screen_index)
+
+    return __inner
+
+
 #### OTHER FUNCTIONS ####
 
 def my_log(s):
@@ -352,10 +375,7 @@ keys = [
     Key([alt], "4", lazy.function(swap_group(group_names[3]))),
 
     # Switch groups on 2nd monitor
-    Key([mod], "F1", lazy.group[group_names[0]].toscreen(1)),
-    Key([mod], "F2", lazy.group[group_names[1]].toscreen(1)),
-    Key([mod], "F3", lazy.group[group_names[2]].toscreen(1)),
-    Key([mod], "F4", lazy.group[group_names[3]].toscreen(1)),
+    Key([mod], "F5", lazy.function(group_to_screen_by_index(5))),
 
     Key([], "F12", lazy.function(to_urgent)),
 
@@ -375,12 +395,12 @@ keys = [
 
     # Launch applications
     Key([mod], "Return", lazy.spawn(terminal)),
-    #Key([mod], "w", lazy.spawn(browser)),
-    Key([mod], "w", lazy.function(find_or_run(browser, (browser_wm_class,), group="2:www"))),
+    Key([mod], "w", lazy.function(find_or_run(browser, (browser_wm_class,), group=group_names[1]))),
+    #Key([mod], "q", lazy.function(find_or_run("chromium-browser --profile-directory=ProfileDev", ("chromium-browser",), group=group_names[2]))),
     Key([mod], "q", lazy.spawn("chromium-browser --profile-directory=ProfileDev")),
     Key([mod], "f", lazy.spawn(file_manager)),
     Key([mod], "v", lazy.function(find_or_run("viber", ("viber",), ))),
-    Key([mod], "s", lazy.spawn("skypeforlinux")),
+    Key([mod], "s", lazy.function(find_or_run("skypeforlinux", ("Skype",), ))),
     Key([mod], "d", lazy.spawn("goldendict")),
     Key([mod], "e", lazy.spawn("gedit")),
     Key([mod], "c", lazy.spawn("gnome-calculator")),
@@ -399,11 +419,8 @@ keys = [
     #Key([mod], "t", lazy.findwindow()),
     Key([mod], "r", lazy.spawncmd()),
     
-    
-    #Key([], "F8", lazy.screens[1].setGroup("4:msg")),
-    #Key([], "F8", lazy.group["4:msg"].toscreen(1)),
     # suspend
-    Key([mod, "control"], "z", lazy.spawn("systemctl suspend"))
+    Key([mod, "control"], "z", lazy.spawn("systemctl suspend")),
 ]
 
 groups = [
@@ -426,14 +443,12 @@ groups = [
         Group(group_names[3],
             position=4,
             layout='monadtall',
-            matches=[Match(wm_class=['ViberPC', 'GoldenDict', 'Skype'])]
+            matches=[Match(wm_class=['ViberPC', 'GoldenDict'])]
             ),
         Group('gimp',
             init=False,
             persist=False,
             layout='gimp',
-            #layout='floating',
-            #layouts=['floating', 'max'],
             matches=[Match(wm_class=['Gimp'])]
             ),
         Group('vbox',
@@ -442,18 +457,35 @@ groups = [
             layout='max',
             matches=[Match(wm_class=['VirtualBox Manager'])],
             ),
+        Group('skype',
+            init=False,
+            persist=False,
+            layout='max',
+            matches=[Match(wm_class=['Skype'])],
+            ),
 ]
+
 # auto bind keys to dgroups mod+1 to 9
-dgroups_key_binder = simple_key_binder(mod)
+#dgroups_key_binder = simple_key_binder(mod)
 
-#for i in groups:
-#    keys.extend([
-#        # mod1 + letter of group = switch to group
-#        Key([mod], i.name, lazy.group[i.name].toscreen()),
+for i in range(0, 10):
+    key_name = str(i + 1) if i < 9 else "0"
+    fkey_name = "F" + str(i + 1)
+    keys.extend([
+        # switch to group on current screen
+        Key([mod], key_name, lazy.function(group_to_screen_by_index(i))),
 
-        # mod1 + shift + letter of group = switch to & move focused window to group
-#        Key([mod, "shift"], i.name, lazy.window.togroup(i.name)),
-#    ])
+        # switch to group on 2nd screen
+        Key([mod], fkey_name, lazy.function(group_to_screen_by_index(i, 1))),
+
+        # switch to & move focused window to group on current screen
+        #Key([mod, "shift"], i.name, lazy.window.togroup(i.name)),
+        Key([mod, "shift"], key_name, lazy.function(window_to_group_by_index(i))),
+
+        # switch to & move focused window to group on 2nd screen
+        #Key([mod, "shift"], i.name, lazy.window.togroup(i.name)),
+        Key([mod, "shift"], fkey_name, lazy.function(window_to_group_by_index(i, 1))),
+    ])
 
 color_hl = "#C3C300"
 #color_hl = "#44DD44"

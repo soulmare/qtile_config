@@ -436,9 +436,9 @@ keys = [
     #Key([], "F12", lazy.function(to_urgent)),
 
     # Keyboard layouts
-    #Key([mod], "F1", lazy.spawn("setxkbmap -layout us")),
-    #Key([mod], "F2", lazy.spawn("setxkbmap -layout ru")),
-    #Key([mod], "F3", lazy.spawn("setxkbmap -layout ua")),
+    Key([mod, "shift"], "e", lazy.spawn("dbus-send --dest=ru.gentoo.KbddService /ru/gentoo/KbddService ru.gentoo.kbdd.set_layout uint32:0")),
+    Key([mod, "shift"], "r", lazy.spawn("dbus-send --dest=ru.gentoo.KbddService /ru/gentoo/KbddService ru.gentoo.kbdd.set_layout uint32:1")),
+    Key([mod, "shift"], "u", lazy.spawn("dbus-send --dest=ru.gentoo.KbddService /ru/gentoo/KbddService ru.gentoo.kbdd.set_layout uint32:2")),
 
     # Sound
     Key([], "XF86AudioRaiseVolume", lazy.spawn("amixer sset Master 5%+")),

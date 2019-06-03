@@ -662,7 +662,21 @@ cur_scr2_options = dict(
         padding = 0,
         fontsize=14,
 )
- 
+task_list_options = dict(
+                    #border = "AA2A2A",
+                    #border = colors[17],
+                    border = "939393",
+                    foreground = "ffffff",
+                    borderwidth = 0,
+                    icon_size = 20,
+                    fontsize = 14,
+                    spacing = 3,
+                    highlight_method = "block",
+                    txt_floating = "🗗",
+                    txt_maximized = "🗖",
+                    txt_minimized = "🗕",
+)
+
 screens = [
     Screen(
         top=bar.Bar(
@@ -692,7 +706,8 @@ screens = [
                 widget.Sep(**sep_inv_options),
                 #widget.CurrentScreen(**cur_scr2_options),
                 widget.TextBox(**wn_prefix_options),
-                widget.WindowName(**wn_options),
+                widget.TaskList(**task_list_options),
+                #widget.WindowName(**wn_options),
                 widget.Notify(
                     background = colors[16],
                     background_urgent = "FF0000",
@@ -704,7 +719,6 @@ screens = [
 #                        update_interval = 2,
 #                        padding = 5
 #                        ),
-                #widget.TaskList(),
                 #widget.WindowTabs(),
                 widget.Sep(**sep_inv_options),
                 widget.TextBox(
@@ -810,7 +824,8 @@ screens = [
                         ),
                 widget.TextBox(**wn_prefix_options),
                 #widget.CurrentScreen(**cur_scr2_options),
-                widget.WindowName(**wn_options),
+                widget.TaskList(**task_list_options),
+                #widget.WindowName(**wn_options),
                 #widget.KeyboardLayout(**widget_kb_layout_options),
                 widget.KeyboardKbdd(**widget_kbdd_options),
             ],

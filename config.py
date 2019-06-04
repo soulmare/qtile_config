@@ -89,10 +89,12 @@ flat_theme = {
 theme = flat_theme
 #bars_background = ["#101010", "#202020"]
 
-layout_theme = {"border_width": 2,
+layout_theme = {
+            "border_width": 3,
+            #"margin": 10,
             "margin": 0,
             "border_focus": "DD0000",
-            "border_normal": "1D2330"
+            "border_normal": "444444"
            }
 
 
@@ -162,17 +164,12 @@ def to_urgent(qtile):
 
 
 class swap_group(object):
-    def __init__(self, group):
-        self.group = group
+    def __init__(self, group_idx):
+        self.group_idx = group_idx
         self.last_group = None
 
-    def group_by_name(self, groups, name):
-        for group in groups:
-            if group.name == name:
-                return group
-
     def __call__(self, qtile):
-        group = self.group_by_name(qtile.groups, self.group)
+        group = qtile.groups[self.group_idx]
         cg = qtile.currentGroup
         if cg != group:
             qtile.currentScreen.setGroup(group)
@@ -329,6 +326,7 @@ group_names = [
         "2:www",
         "3:dev",
         "4:msg",
+        "5:aux",
         ]
 
 prompt = "{0}@{1}: ".format(os.environ["USER"], socket.gethostname())
@@ -425,10 +423,10 @@ keys = [
     Key([mod, "shift"], "Tab", lazy.prev_layout()),
 
     # Swap groups
-    Key([alt], "1", lazy.function(swap_group(group_names[0]))),
-    Key([alt], "2", lazy.function(swap_group(group_names[1]))),
-    Key([alt], "3", lazy.function(swap_group(group_names[2]))),
-    Key([alt], "4", lazy.function(swap_group(group_names[3]))),
+    #Key([alt], "1", lazy.function(swap_group(group_names[0]))),
+    #Key([alt], "2", lazy.function(swap_group(group_names[1]))),
+    #Key([alt], "3", lazy.function(swap_group(group_names[2]))),
+    #Key([alt], "4", lazy.function(swap_group(group_names[3]))),
 
     # Switch groups on 2nd monitor
     Key([mod], "F5", lazy.function(group_to_screen_by_index(5))),
@@ -505,6 +503,10 @@ groups = [
             layout='monadtall',
             matches=[Match(wm_class=['ViberPC', 'GoldenDict'])]
             ),
+        Group(group_names[4],
+            position=4,
+            layout='max',
+            ),
         Group('gimp',
             init=False,
             persist=False,
@@ -545,6 +547,9 @@ for i in range(0, 10):
         # switch to & move focused window to group on 2nd screen
         #Key([mod, "shift"], i.name, lazy.window.togroup(i.name)),
         Key([mod, "shift"], fkey_name, lazy.function(window_to_group_by_index(i, 1))),
+
+        # Swap groups
+        Key([alt], key_name, lazy.function(swap_group(i))),
     ])
 
 layouts = [

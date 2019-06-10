@@ -34,19 +34,29 @@ from libqtile.command import lazy
 from libqtile import layout, bar, widget, hook
 from libqtile.dgroups import simple_key_binder
 
+#from libqtile import xcbq
+#xcbq.keysyms["Caps_Lock"] = 0xffe5
+
 from typing import List
+
+# Settings
 
 mod = "mod4"
 alt = "mod1"
 terminal = "gnome-terminal --hide-menubar"
 browser = "chromium-browser --profile-directory=Default"
 browser_wm_class = "chromium-browser"
+browser_2 = "chromium-browser --profile-directory=ProfileDev"
+browser_2_wm_class = "chromium-browser"
 file_manager = "nautilus"
-home = os.path.expanduser('~')
 # Switch selected group when moving window to another group
 switch_group_when_moving_window = True
 # Switch focused screen when moving window to another screen
 switch_screen_when_moving_window = True
+# Use reversed order when navigating between screens
+screens_order_reverse = True
+
+home = os.path.expanduser('~')
 
 ### COLORS ###
 
@@ -292,7 +302,22 @@ def regex(name):
 def xrandr_set_screens():
     xrandr_state = check_output(['xrandr'])
 
-    if b'HDMI-3 connected' in xrandr_state:
+    if b'HDMI-2 connected' in xrandr_state \
+            and b'HDMI-3 connected' in xrandr_state:
+        # Two external monitors
+        xrandr_setting = [
+            'xrandr',
+            '--output', 'VGA-1','--off',
+            '--output', 'LVDS-1','--off',
+            '--output', 'HDMI-2', '--mode','1280x1024','--pos','0x0','--rotate','normal',
+            '--output', 'HDMI-3', '--primary','--mode','1920x1080','--pos','1280x140','--rotate','normal',
+            '--output', 'HDMI-1','--off',
+            '--output', 'DP-3', '--off',
+            '--output', 'DP-2', '--off',
+            '--output', 'DP-1', '--off',
+            ]
+    elif b'HDMI-3 connected' in xrandr_state:
+        # One external monitor and built-in monitor
         xrandr_setting = [
             'xrandr',
             '--output', 'VGA-1','--off',
@@ -305,6 +330,7 @@ def xrandr_set_screens():
             '--output', 'DP-1', '--off',
             ]
     else:
+        # Built-in monitor only
         xrandr_setting = [
             'xrandr',
             '--output', 'VGA-1','--off',
@@ -326,12 +352,11 @@ group_names = [
         "2:www",
         "3:dev",
         "4:msg",
-        "5:aux",
+        "5:etc",
         ]
 
 prompt = "{0}@{1}: ".format(os.environ["USER"], socket.gethostname())
 dmenu = 'dmenu_run -i -p ' + prompt + ' -fn "Ubuntu-14" -nb "' + colors[14][0] + '" -nf "' + colors[13][0] + '" -sb "' + colors[14][1] + '" -sf "' + colors[13][1] + '"'
-my_log(dmenu)
 dmenu_windows = home + '/.config/qtile/dmenu-qtile-windowlist.py'
 
 # Key bindings
@@ -349,8 +374,8 @@ keys = [
     Key([mod], "h", lazy.layout.left()),
 
     # Switch between monitors
-    Key([mod], "Left", lazy.to_screen(0)),
-    Key([mod], "Right", lazy.to_screen(1)),
+    Key([mod], "Left", lazy.to_screen(1 if screens_order_reverse else 0)),
+    Key([mod], "Right", lazy.to_screen(0 if screens_order_reverse else 1)),
 
     # Move windows up or down in current stack
     Key([mod, "shift"], "j", lazy.layout.shuffle_down()),
@@ -433,10 +458,11 @@ keys = [
 
     #Key([], "F12", lazy.function(to_urgent)),
 
-    # Keyboard layouts
-    Key([mod, "shift"], "e", lazy.spawn("dbus-send --dest=ru.gentoo.KbddService /ru/gentoo/KbddService ru.gentoo.kbdd.set_layout uint32:0")),
-    Key([mod, "shift"], "r", lazy.spawn("dbus-send --dest=ru.gentoo.KbddService /ru/gentoo/KbddService ru.gentoo.kbdd.set_layout uint32:1")),
-    Key([mod, "shift"], "u", lazy.spawn("dbus-send --dest=ru.gentoo.KbddService /ru/gentoo/KbddService ru.gentoo.kbdd.set_layout uint32:2")),
+    # Keyboard layout direct selection
+    Key([alt], "l", lazy.spawn("dbus-send --dest=ru.gentoo.KbddService /ru/gentoo/KbddService ru.gentoo.kbdd.set_layout uint32:0")),
+    Key([alt], "semicolon", lazy.spawn("dbus-send --dest=ru.gentoo.KbddService /ru/gentoo/KbddService ru.gentoo.kbdd.set_layout uint32:1")),
+    Key([alt], "quoteright", lazy.spawn("dbus-send --dest=ru.gentoo.KbddService /ru/gentoo/KbddService ru.gentoo.kbdd.set_layout uint32:2")),
+    #Key([mod, "shift"], "u", lazy.spawn("dbus-send --dest=ru.gentoo.KbddService /ru/gentoo/KbddService ru.gentoo.kbdd.set_layout uint32:2")),
 
     # Sound
     Key([], "XF86AudioRaiseVolume", lazy.spawn("amixer sset Master 5%+")),
@@ -450,7 +476,7 @@ keys = [
     # Launch applications
     Key([mod], "Return", lazy.spawn(terminal)),
     Key([mod], "w", lazy.function(find_or_run(browser, (browser_wm_class,), group=group_names[1]))),
-    #Key([mod], "q", lazy.function(find_or_run("chromium-browser --profile-directory=ProfileDev", ("chromium-browser",), group=group_names[2]))),
+    #Key([mod], "q", lazy.function(find_or_run(browser_2, (browser_2_wm_class, ), group=group_names[2]))),
     Key([mod], "q", lazy.spawn("chromium-browser --profile-directory=ProfileDev")),
     Key([mod], "f", lazy.spawn(file_manager)),
     Key([mod], "v", lazy.function(find_or_run("viber"))),
@@ -484,7 +510,7 @@ keys = [
 groups = [
         Group(group_names[0],
             position=1,
-            layout='monadtall',
+            layout='ratiotile',
             #layouts=['monadtall', 'max', 'ratiotile', 'treetab'],
             ),
         Group(group_names[1],
@@ -505,7 +531,7 @@ groups = [
             ),
         Group(group_names[4],
             position=4,
-            layout='max',
+            layout='ratiotile',
             ),
         Group('gimp',
             init=False,
@@ -553,7 +579,11 @@ for i in range(0, 10):
     ])
 
 layouts = [
-    layout.MonadTall(ratio=0.7, **layout_theme),
+    layout.MonadTall(
+        ratio=0.7,
+        max_ratio=0.80,
+        **layout_theme
+        ),
     layout.Max(**layout_theme),
     layout.RatioTile(**layout_theme),
     #layout.Tile(ratio=0.50, masterWindows=2),
@@ -673,9 +703,11 @@ task_list_options = dict(
                     border = "939393",
                     foreground = "ffffff",
                     borderwidth = 0,
+                    max_title_width = 400,
                     icon_size = 20,
                     fontsize = 14,
                     spacing = 3,
+                    rounded = False,
                     highlight_method = "block",
                     txt_floating = "🗗",
                     txt_maximized = "🗖",
@@ -717,6 +749,7 @@ screens = [
                     background = colors[16],
                     background_urgent = "FF0000",
                     foreground = "000000",
+                    default_timeout = 30,
                     ),
 #                widget.Net(
 #                        interface = "eno1",
